@@ -1,0 +1,9 @@
+# Files and folders that must be backed up because they are not in Git.
+# One path per line, relative to the repository root or absolute.
+# Folders are copied recursively. Lines starting with # are ignored.
+#
+# Example:
+#   data/app.db
+#   Assets/Generated
+#
+# The backup script writes to Backups/<timestamp>/ and never deletes anything.

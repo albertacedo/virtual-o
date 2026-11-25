@@ -1,0 +1,73 @@
+site_name: Virtual-O
+site_description: One line describing the project
+site_url: https://albertacedo.github.io/virtual-o/
+repo_url: https://github.com/albertacedo/virtual-o
+repo_name: albertacedo/virtual-o
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  # Uncomment when a page is renamed, so old links keep working:
+  # - redirects:
+  #     redirect_maps:
+  #       old-name.md: new-name.md
+
+exclude_docs: |
+  sessions/_template.md
+
+nav:
+  - Home: index.md
+  - Status: status.md
+  - Architecture: architecture.md
+  - Glossary: glossary.md
+  - Roadmap: roadmap.md
+  - Decisions:
+      - Decision index: decisions/index.md
+      - "0001 · Record architecture decisions": decisions/0001-record-architecture-decisions.md
+  - Backup: backup.md
+  - Releases: releases.md
+  - Moving to another machine: handover.md
+  - Sessions:
+      - Session index: sessions/index.md
+      - "2026-11-25 · Bootstrap": sessions/2026-11-25-bootstrap.md
+  - Archive: archive/index.md

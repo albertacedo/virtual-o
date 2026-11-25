@@ -1,0 +1,27 @@
+# Session index
+
+Every work session has a page with its objective, what was done, the files that changed
+and what is still pending.
+
+| Date | Session | Commits | One-line summary |
+|---|---|---|---|
+| 2026-11-25 | [Bootstrap](2026-11-25-bootstrap.md) | — | Project bootstrap |
+
+The first real session adds its row here:
+
+```markdown
+| YYYY-MM-DD | [Bootstrap](YYYY-MM-DD-bootstrap.md) | `abc1234` | Repository, documentation and session workflow |
+```
+
+## Naming convention
+
+```text
+docs/sessions/YYYY-MM-DD-short-title.md
+```
+
+If there are two sessions on the same day, add a suffix (`-2`, `-3`…).
+
+## Template
+
+Copy `_template.md` (in the same folder) to start a new page. It is excluded from the
+website, so it does not show up in the navigation.
