@@ -23,8 +23,10 @@ const mapInfo = await readJson(path.join(mapDir, 'info.json'))
 const georef = await readJson(path.join(mapDir, 'georeference.json'))
 const dtm = await readJson(path.join(dtmDir, 'metadata.json'))
 
-if (dtm.crs !== 'EPSG:25831') throw new Error(`unsupported DTM CRS: ${dtm.crs}`)
-if (georef.crs.code !== 25831) throw new Error(`map and DTM CRS do not match: ${georef.crs.code}`)
+const mapCrs = `${georef.crs.catalog ?? 'EPSG'}:${georef.crs.code}`
+if (!/^EPSG:\d+$/.test(dtm.crs)) throw new Error(`unsupported DTM CRS: ${dtm.crs}`)
+const datumCompatible = mapCrs === 'EPSG:32632' && dtm.crs === 'EPSG:25832'
+if (dtm.crs !== mapCrs && !datumCompatible) throw new Error(`map and DTM CRS do not match: ${mapCrs} vs ${dtm.crs}`)
 
 const projectedMap = {
   west: georef.anchor.easting - georef.anchor.x,
@@ -59,6 +61,8 @@ const manifest = {
     metadata: 'height/metadata.json',
     resolution: dtm.resolution,
     encoding: dtm.encoding,
+    sourceCrs: dtm.crs,
+    coordinateCompatibility: datumCompatible ? 'EPSG:25832 terrain coordinates are numerically compatible with the EPSG:32632 map at this scale' : 'exact CRS match',
   },
   vectors: 'vectors/objects.geojson',
   drape: 'drape/map.png',

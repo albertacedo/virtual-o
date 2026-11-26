@@ -69,7 +69,8 @@ nav:
   - Releases: releases.md
   - Moving to another machine: handover.md
   - Sessions:
-       - Session index: sessions/index.md
-       - "2026-11-25 · Bootstrap": sessions/2026-11-25-bootstrap.md
-       - "2026-11-26 · Prepare Llinars DTM and first bundle": sessions/2026-11-26-dtm-bundle.md
+      - Session index: sessions/index.md
+      - "2026-11-25 · Bootstrap": sessions/2026-11-25-bootstrap.md
+      - "2026-11-26 · Prepare Llinars DTM and first bundle": sessions/2026-11-26-dtm-bundle.md
+      - "2026-11-26 · Multi-country DTM providers": sessions/2026-11-26-multicountry-dtm.md
   - Archive: archive/index.md

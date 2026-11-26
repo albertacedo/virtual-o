@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: **2026-11-26** (session N)_
+_Last updated: **2026-11-26** (multi-country DTM session)_
 
 This page is the single source of truth for **what is pending**. It is read at the start
 of every session and updated at the end — see
@@ -12,6 +12,14 @@ of every session and updated at the end — see
 
 - [ ] Review `data/out/sample-langvatnet/report.md`, `map.png` and `symbols.csv`; confirm whether the sample input is suitable for the next phase.
 - [ ] Add a real Catalonia `.ocd` map and verify its CRS, extent and used symbols.
+- [x] Convert `Bugeat Nord.ocd` from OCAD 9 to OCAD 12/2018 and validate its extent and symbols.
+- [x] Confirm `Bugeat Nord` as France / EPSG:27572 from its preserved projected coordinates and the Bugeat location.
+- [ ] Extend DTM acquisition to additional countries and terrain-data providers beyond Catalonia and France.
+- [ ] Generalise terrain-data selection so the map CRS/location selects the appropriate country provider instead of assuming ICGC/Catalonia.
+
+### Compatibility
+
+- [ ] Implement a reader or conversion path for OCAD editions older than OCAD 10; the current `ocad2geojson` reader rejects OCAD 9.
 
 ### Later
 
@@ -28,6 +36,9 @@ of every session and updated at the end — see
 - [x] Linked the Llinars sprint map provisionally to EPSG:25831 using the municipal football pitch as an anchor.
 - [x] Requested and prepared the official ICGC 5 m DTM for the Llinars map; generated a Float32 heightmap and metadata under the ignored `data/out` directory.
 - [x] Built the first ignored `map.bundle` containing the heightmap, georeferenced vectors, map drape and manifest; verified that the DTM covers the map extent.
+- [x] Recorded the Bugeat legacy CRS override, downloaded the IGN RGE ALTI 5 m raster, and built a covered Bugeat `map.bundle`.
+- [x] Generalised GeoTIFF preparation and bundle CRS checks for EPSG:27572, and added repeatable IGN download/provider commands.
+- [x] Added the Kartverket/Geonorge WCS tile adapter for Norway and built the sample Langvatnet Phase 1 bundle with real DTM data.
 
 - [x] Finished task — short note or commit.
 - [x] Finished task.

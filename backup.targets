@@ -7,5 +7,6 @@
 #   Assets/Generated
 data/input/
 data/out/
+tools/mapper/
 #
 # The backup script writes to Backups/<timestamp>/ and never deletes anything.

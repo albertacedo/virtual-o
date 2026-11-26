@@ -261,5 +261,75 @@ drape and `manifest.json`. Terrain classes and the Unity importer are still pend
 - Executar `npm.cmd install`.
 - Posar el mapa `.ocd` a `data/input`.
 - Executar `npm.cmd run phase0`.
+- Per a mapes OCAD 9 o anteriors, obrir-los amb OpenOrienteering Mapper i desar una còpia
+  en OCAD 12 abans d’executar la Fase 0. En aquesta màquina el conversor local és a
+  `tools/mapper/` (està ignorat per Git; cal restaurar-lo des de la còpia local o instal·lar
+  Mapper de nou).
 - No cal copiar `data/out`, perquè són fitxers generats i estan ignorats per git.
 - Si es vol continuar amb Unity, el projecte actual de Unity és una carpeta separada i no és encara el projecte 3D final.
+
+## Bugeat Nord validation
+
+The legacy `Bugeat Nord.ocd` file was converted with OpenOrienteering Mapper 0.9.6 and
+Phase 0 now reads the resulting OCAD 12 file successfully. The map is 1,701.2 m ×
+1,510.5 m, contains 2,364 objects and uses 79 symbols. The converted file preserves a
+projected origin (567,000 E, 2,068,000 N), but its CRS catalog/code is empty.
+OpenOrienteering Mapper labels the map as `- local -`, so its displayed geographic values
+are not useful. Interpreting the preserved coordinates as historic French Lambert II
+étendu (EPSG:27572) gives 45.6116046 N, 1.9142267 E, which is north-west of Bugeat and
+matches the `Bugeat Nord` map name. This is sufficient to select France's
+IGN/Géoplateforme terrain source, but the pipeline still needs an explicit legacy CRS
+override because the OCAD metadata itself does not contain the EPSG code.
+
+The verified legacy CRS is recorded in `data/georeferencing/bugeat-nord-crs.json`. Resolve
+the first terrain provider with:
+
+```powershell
+npm.cmd run resolve-terrain -- "data/out/bugeat-nord/info.json" "data/georeferencing/bugeat-nord-crs.json"
+```
+
+This writes `terrain-source.json` next to the Phase 0 report and selects IGN/Géoplateforme
+for France.
+
+Download and prepare the IGN raster with:
+
+```powershell
+npm.cmd run download-ign-dtm -- "data/out/bugeat-nord/info.json" "data/out/bugeat-nord/ign-source/bugeat-rge-alti.tif" "data/georeferencing/bugeat-nord-crs.json"
+npm.cmd run prepare-dtm -- "data/out/bugeat-nord/ign-source/bugeat-rge-alti.tif" "data/out/bugeat-nord/dtm" "EPSG:27572"
+npm.cmd run apply-crs-override -- "data/out/bugeat-nord" "data/georeferencing/bugeat-nord-crs.json"
+npm.cmd run build-bundle -- "data/out/bugeat-nord" "data/out/bugeat-nord/dtm" "data/out/bugeat-nord/map.bundle"
+```
+
+The resulting bundle contains the 5 m Float32 heightmap, EPSG:27572 vectors, the map drape
+and a manifest confirming that the terrain covers the full map extent.
+
+## Terrain-O and Norwegian terrain
+
+Terrain-O does not use its WMS for elevation values. Its `fetch/kartverket.py` adapter
+uses Kartverket's WCS 1.0 service:
+
+```text
+https://wcs.geonorge.no/skwms1/wcs.hoyde-{kind}-nhm-{epsg}
+coverage=nhm_{kind}_topo_{epsg}
+```
+
+It requests 1 km GeoTIFF tiles at 1 m resolution, caches them, mosaics the tiles into a
+north-up Float32 grid, and can fill gaps from neighbouring UTM zones. The useful design
+can be reimplemented in this Node pipeline; the Python/rasterio implementation and the
+Terrain-O viewer are not copied. The Norwegian sample currently uses EPSG:32632 while
+Kartverket's service is normally requested with ETRS89 / UTM 32N (EPSG:25832), so the
+provider adapter must record and validate that datum compatibility before building a
+bundle.
+
+The working commands for the sample are:
+
+```powershell
+npm.cmd run resolve-terrain -- "data/out/sample-langvatnet/info.json"
+npm.cmd run download-kartverket-dtm -- "data/out/sample-langvatnet/info.json" "data/out/sample-langvatnet/kartverket"
+npm.cmd run prepare-dtm -- "data/out/sample-langvatnet/kartverket/666000_6646000.tif" "data/out/sample-langvatnet/dtm" "EPSG:25832"
+npm.cmd run apply-crs-override -- "data/out/sample-langvatnet" "data/georeferencing/sample-langvatnet-crs.json"
+npm.cmd run build-bundle -- "data/out/sample-langvatnet" "data/out/sample-langvatnet/dtm" "data/out/sample-langvatnet/map.bundle"
+```
+
+The bundle is covered by the real Kartverket DTM and records the source CRS compatibility
+in its manifest.

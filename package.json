@@ -7,8 +7,12 @@
   "scripts": {
     "phase0": "node tools/phase0/inspect.mjs",
     "georeference": "node tools/phase0/georeference.mjs",
+    "apply-crs-override": "node tools/phase0/apply-crs-override.mjs",
+    "download-ign-dtm": "node tools/phase1/download-ign-dtm.mjs",
+    "download-kartverket-dtm": "node tools/phase1/download-kartverket-dtm.mjs",
     "prepare-dtm": "node tools/phase1/prepare-dtm.mjs",
-    "build-bundle": "node tools/phase1/build-bundle.mjs"
+    "build-bundle": "node tools/phase1/build-bundle.mjs",
+    "resolve-terrain": "node tools/phase1/resolve-terrain-source.mjs"
   },
   "license": "AGPL-3.0-or-later",
   "overrides": {

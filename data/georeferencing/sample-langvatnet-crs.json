@@ -1,0 +1,10 @@
+{
+  "source": "sample-langvatnet.ocd",
+  "crs": {
+    "catalog": "EPSG",
+    "code": 32632,
+    "name": "WGS 84 / UTM zone 32N"
+  },
+  "confidence": "high",
+  "method": "CRS read from the OCAD metadata by ocad2geojson."
+}

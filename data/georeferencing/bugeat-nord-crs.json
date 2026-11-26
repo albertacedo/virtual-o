@@ -1,0 +1,10 @@
+{
+  "source": "Bugeat Nord-converted.ocd",
+  "crs": {
+    "catalog": "EPSG",
+    "code": 27572,
+    "name": "NTF (Paris) / Lambert zone II"
+  },
+  "confidence": "high",
+  "method": "The preserved coordinates 567000 E, 2068000 N transform to 45.6116046 N, 1.9142267 E under EPSG:27572, matching Bugeat Nord."
+}

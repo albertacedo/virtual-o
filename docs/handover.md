@@ -18,6 +18,7 @@ running again on a different machine with the same context.
 | Local databases and generated data | **no** | listed in `backup.targets`; copy or restore a backup |
 | `Backups/` | **no** | ignored by Git |
 | `site/`, `bin/`, `obj/`, logs | **no** | regenerated |
+| `tools/mapper/` | **no** | Local OpenOrienteering Mapper bundle; restore it or install Mapper separately when converting legacy OCAD files |
 | Secrets and `.env` | **no** | recreated by hand, never committed |
 
 ## Fresh clone
@@ -42,6 +43,10 @@ Then copy or restore the paths in `backup.targets` from the other machine.
 
 ## Per-machine traps
 
+- `ocad2geojson` does not read OCAD 9 and older files. This machine keeps an ignored
+  OpenOrienteering Mapper 0.9.6 bundle under `tools/mapper/`; use it to open the legacy
+  map and save a working copy as OCAD 12 before running Phase 0. The bundle is local and
+  is not part of a fresh clone.
 - **Trap** — what happens and how to avoid it.
 - **Trap** — what happens and how to avoid it.
 

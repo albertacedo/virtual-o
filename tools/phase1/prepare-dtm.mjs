@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 /**
- * Prepare an ICGC tiled, LZW-compressed Float32 GeoTIFF as a local heightmap.
- * The ICGC 5 m download already uses EPSG:25831 and the requested map extent,
- * so no reprojection is needed here.
+ * Prepare a Float32 GeoTIFF as a local heightmap. Supports the tiled/LZW ICGC
+ * output and the uncompressed strip GeoTIFF returned by the IGN WMS service.
  *
  * Usage:
- *   node tools/phase1/prepare-dtm.mjs <input.tif> <output-dir>
+ *   node tools/phase1/prepare-dtm.mjs <input.tif> <output-dir> [crs]
  */
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-const [inputArg, outputArg] = process.argv.slice(2)
+const [inputArg, outputArg, crsArg = 'EPSG:25831'] = process.argv.slice(2)
 if (!inputArg || !outputArg) {
   console.error('usage: prepare-dtm.mjs <input.tif> <output-dir>')
   process.exit(1)
@@ -57,8 +56,16 @@ const tileWidth = tags.get(0x0142)?.[0]
 const tileHeight = tags.get(0x0143)?.[0]
 const tileOffsets = tags.get(0x0144)
 const tileByteCounts = tags.get(0x0145)
-if (!width || !height || bitsPerSample !== 32 || compression !== 5 || !tileOffsets || !tileByteCounts) {
-  throw new Error(`unsupported TIFF layout (${endian}, ${width}x${height}, ${bitsPerSample} bit, compression ${compression})`)
+const stripOffsets = tags.get(0x0111)
+const stripByteCounts = tags.get(0x0117)
+const rowsPerStrip = tags.get(0x0116)?.[0]
+const sampleFormat = tags.get(0x0153)?.[0] ?? 1
+const scale = tags.get(33550)
+const tiePoint = tags.get(33922)
+const tiled = (compression === 1 || compression === 5) && tileOffsets && tileByteCounts && tileWidth && tileHeight
+const stripped = compression === 1 && stripOffsets && stripByteCounts && rowsPerStrip
+if (!width || !height || bitsPerSample !== 32 || sampleFormat !== 3 || (!tiled && !stripped)) {
+  throw new Error(`unsupported TIFF layout (${endian}, ${width}x${height}, ${bitsPerSample} bit, compression ${compression}, sample format ${sampleFormat})`)
 }
 
 function decodeLzw(input) {
@@ -112,30 +119,49 @@ function decodeLzw(input) {
   return result
 }
 
-const tilesX = Math.ceil(width / tileWidth)
-const tilesY = Math.ceil(height / tileHeight)
 const raster = new Float32Array(width * height)
-for (let tile = 0; tile < tileOffsets.length; tile += 1) {
-  const compressed = bytes.subarray(tileOffsets[tile], tileOffsets[tile] + tileByteCounts[tile])
-  const decoded = decodeLzw(compressed)
-  const tileValues = new Float32Array(decoded.buffer, decoded.byteOffset, decoded.byteLength / 4)
-  const tileX = tile % tilesX
-  const tileY = Math.floor(tile / tilesX)
-  for (let y = 0; y < tileHeight; y += 1) {
-    for (let x = 0; x < tileWidth; x += 1) {
-      const source = y * tileWidth + x
-      const targetX = tileX * tileWidth + x
-      const targetY = tileY * tileHeight + y
-      if (targetX < width && targetY < height) raster[targetY * width + targetX] = tileValues[source]
+const readFloat = (offset) => endian === 'LE' ? bytes.readFloatLE(offset) : bytes.readFloatBE(offset)
+if (tiled) {
+  const tilesX = Math.ceil(width / tileWidth)
+  for (let tile = 0; tile < tileOffsets.length; tile += 1) {
+    const compressed = bytes.subarray(tileOffsets[tile], tileOffsets[tile] + tileByteCounts[tile])
+    const decoded = compression === 5 ? decodeLzw(compressed) : compressed
+    const tileX = tile % tilesX
+    const tileY = Math.floor(tile / tilesX)
+    for (let y = 0; y < tileHeight; y += 1) {
+      for (let x = 0; x < tileWidth; x += 1) {
+        const source = (y * tileWidth + x) * 4
+        const targetX = tileX * tileWidth + x
+        const targetY = tileY * tileHeight + y
+        if (targetX < width && targetY < height) raster[targetY * width + targetX] = readFloatFrom(decoded, source)
+      }
+    }
+  }
+} else {
+  for (let strip = 0; strip < stripOffsets.length; strip += 1) {
+    const rows = Math.min(rowsPerStrip, height - strip * rowsPerStrip)
+    const offset = stripOffsets[strip]
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < width; col += 1) {
+        raster[(strip * rowsPerStrip + row) * width + col] = readFloat(offset + (row * width + col) * 4)
+      }
     }
   }
 }
 
+function readFloatFrom(buffer, offset) {
+  return endian === 'LE' ? buffer.readFloatLE(offset) : buffer.readFloatBE(offset)
+}
+
 const finite = [...raster].filter((value) => Number.isFinite(value) && value !== -9999)
-const min = Math.min(...finite)
-const max = Math.max(...finite)
+const min = finite.reduce((value, item) => Math.min(value, item), Infinity)
+const max = finite.reduce((value, item) => Math.max(value, item), -Infinity)
 const tfw = await fs.readFile(inputPath.replace(/\.tif$/i, '.tfw'), 'utf8').catch(() => '')
 const worldFile = tfw.trim().split(/\s+/).map(Number)
+const resolution = scale?.[0] ?? worldFile[0] ?? 5
+const origin = tiePoint && tiePoint.length >= 6
+  ? { easting: tiePoint[3], northing: tiePoint[4] }
+  : { easting: 0, northing: height * resolution }
 await fs.mkdir(outputDir, { recursive: true })
 await fs.writeFile(path.join(outputDir, 'heightmap.bin'), Buffer.from(raster.buffer))
 const preview = Buffer.alloc(width * height)
@@ -143,10 +169,10 @@ for (let i = 0; i < raster.length; i += 1) preview[i] = raster[i] === -9999 ? 0 
 await fs.writeFile(path.join(outputDir, 'heightmap.pgm'), Buffer.concat([Buffer.from(`P5\n${width} ${height}\n255\n`), preview]))
 await fs.writeFile(path.join(outputDir, 'metadata.json'), `${JSON.stringify({
   source: path.basename(inputPath),
-  crs: 'EPSG:25831',
-  width, height, tileWidth, tileHeight, resolution: 5,
-  origin: { easting: 449147.5, northing: 4610202.5 },
-  extent: { west: 449147.5, east: 450327.5, south: 4609372.5, north: 4610202.5 },
+  crs: crsArg,
+  width, height, tileWidth: tileWidth ?? null, tileHeight: tileHeight ?? null, resolution,
+  origin,
+  extent: { west: origin.easting, east: origin.easting + width * resolution, south: origin.northing - height * resolution, north: origin.northing },
   worldFile, nodata: -9999, minimumElevation: min, maximumElevation: max,
   encoding: 'row-major Float32 little-endian; rows north to south',
 }, null, 2)}\n`)

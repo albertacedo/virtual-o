@@ -3,7 +3,8 @@
 One paragraph: what this project is, who it is for, and what problem it solves.
 
 !!! info "Status"
-    Working as of **YYYY-MM-DD**: what works today. Everything else is tracked in
+    Working as of **2026-11-26**: Phase 0 ingestion and Phase 1 terrain bundles work for
+    Catalonia, France and the Norwegian sample. Everything else is tracked in
     [Status](status.md).
 
 ## What it does
@@ -35,17 +36,17 @@ One paragraph: what this project is, who it is for, and what problem it solves.
 
 | Area | Status |
 |---|---|
-| Core | ✅ / ⚠️ / ❌ |
-| Tests | ✅ / ⚠️ / ❌ |
-| Documentation | ✅ / ⚠️ / ❌ |
+| Core | ✅ Phase 0 + Phase 1 bundle tooling |
+| Tests | ✅ Project checks pass |
+| Documentation | ⚠️ Architecture placeholders remain |
 | Release | ❌ |
 
 ## Stack
 
-- Language and exact version.
-- Framework and exact version.
-- Data store.
-- Deployment target.
+- Node.js 20+ (tested on Node.js 24).
+- OCAD/GeoJSON conversion with `ocad2geojson`; Unity importer not implemented yet.
+- Local GeoTIFF/Float32 terrain bundles under ignored `data/out/`.
+- Documentation deployed with GitHub Actions.
 
 ## Project layout
 

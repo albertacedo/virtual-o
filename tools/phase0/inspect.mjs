@@ -193,17 +193,23 @@ async function main() {
   }
 
   const header = file.header
-  let crs = null
+  let rawCrs = null
   try {
-    crs = file.getCrs()
+    rawCrs = file.getCrs()
   } catch {
-    crs = null
+    rawCrs = null
   }
+  // Older OCAD files can preserve an origin without a usable CRS identifier.
+  // Do not treat catalog:null/code:0 as georeferencing: downstream downloads
+  // need a real CRS and a false positive would select the wrong terrain source.
+  const crs = rawCrs && typeof rawCrs.catalog === 'string' && Number.isInteger(rawCrs.code) && rawCrs.code > 0
+    ? rawCrs
+    : null
 
   /* ---- objects: one feature per map object, in projected metres ---- */
 
   const objectsGeoJson = ocadToGeoJson(file, {
-    applyCrs: true,
+     applyCrs: Boolean(rawCrs),
     generateSymbolElements: false,
     coordinatePrecision: 3,
   })
@@ -300,7 +306,7 @@ async function main() {
       subVersion: header.subVersion,
       subSubVersion: header.subSubVersion,
     },
-    scale: crs?.scale ?? null,
+     scale: rawCrs?.scale ?? null,
     georeferencing: crs
       ? {
           catalog: crs.catalog,
@@ -360,7 +366,7 @@ async function main() {
 
   /* ---- report ---- */
 
-  const warnings = buildWarnings({ info, symbols, usedSymbols, crs, bounds, orphanObjects })
+  const warnings = buildWarnings({ info, symbols, usedSymbols, crs, rawCrs, bounds, orphanObjects })
   const report = buildReport({ info, symbols, usedSymbols, byCategory, warnings, pngNote })
   await fs.writeFile(path.join(outDir, 'report.md'), report, 'utf8')
 
@@ -368,7 +374,7 @@ async function main() {
 
   const rel = path.relative(ROOT, outDir)
   console.log(`
-  OCAD ${header.version}  ·  scale 1:${crs?.scale ?? '?'}  ·  ${crs ? `${crs.catalog}:${crs.code} ${crs.name}` : 'NO GEOREFERENCING'}
+  OCAD ${header.version}  ·  scale 1:${rawCrs?.scale ?? '?'}  ·  ${crs ? `${crs.catalog}:${crs.code} ${crs.name}` : 'INCOMPLETE GEOREFERENCING'}
   extent ${fmt(bounds.width, 1)} m × ${fmt(bounds.height, 1)} m  (${fmt(bboxArea / 10000, 1)} ha)
   ${file.objects.length} objects  ·  ${symbols.length} symbols defined, ${usedSymbols.length} used
   map.png ${pngNote}
@@ -418,13 +424,19 @@ function toSymbolsCsv(symbols) {
   return `${[header.join(','), ...rows].join('\n')}\n`
 }
 
-function buildWarnings({ info, symbols, usedSymbols, crs, bounds, orphanObjects }) {
+function buildWarnings({ info, symbols, usedSymbols, crs, rawCrs, bounds, orphanObjects }) {
   const warnings = []
 
   if (!crs) {
-    warnings.push(
-      'NO GEOREFERENCING: the map has no CRS/origin, so it cannot be aligned with LiDAR or OSM. Phase 1 will need a manual alignment step.'
-    )
+    if (rawCrs && Number.isFinite(rawCrs.easting) && Number.isFinite(rawCrs.northing)) {
+      warnings.push(
+        `INCOMPLETE GEOREFERENCING: the map has an origin (${rawCrs.easting}, ${rawCrs.northing}) but no valid CRS identifier. Confirm the projection before selecting terrain data.`
+      )
+    } else {
+      warnings.push(
+        'NO GEOREFERENCING: the map has no CRS/origin, so it cannot be aligned with LiDAR or OSM. Phase 1 will need a manual alignment step.'
+      )
+    }
   } else if (crs.grivation) {
     warnings.push(
       `Map grivation is ${crs.grivation}°: the map is rotated against the CRS grid. Keep it in mind when aligning with the DEM.`
