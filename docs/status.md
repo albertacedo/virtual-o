@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: **2026-11-26** (multi-country DTM session)_
+_Last updated: **2026-11-26** (multi-country DTM session closed)_
 
 This page is the single source of truth for **what is pending**. It is read at the start
 of every session and updated at the end — see
