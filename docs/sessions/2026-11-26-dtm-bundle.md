@@ -1,7 +1,7 @@
 # 2026-11-26 · Prepare Llinars DTM and first bundle
 
 **Duration:** afternoon
-**Commits:** pending
+**Commits:** `85ebd01` — feat: prepare Llinars DTM and first map bundle
 
 ## Objective
 
@@ -55,7 +55,7 @@ orienteering map and prepare the first Unity-facing bundle.
 
 ## Housekeeping
 
-- [ ] Backup run and verified by the session-end script.
+- [x] Backup run and verified by the session-end script: `Backups/2026-11-26_012507274/`.
 - [ ] Release tagged (only if this session closed a milestone).
 - [x] `docs/status.md` updated.
 
