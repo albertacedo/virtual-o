@@ -10,7 +10,6 @@ of every session and updated at the end — see
 
 ### Next up
 
-- [ ] Review `data/out/sample-langvatnet/report.md`, `map.png` and `symbols.csv`; confirm whether the sample input is suitable for the next phase.
 - [ ] Add a real Catalonia `.ocd` map and verify its CRS, extent and used symbols.
 - [x] Convert `Bugeat Nord.ocd` from OCAD 9 to OCAD 12/2018 and validate its extent and symbols.
 - [x] Confirm `Bugeat Nord` as France / EPSG:27572 from its preserved projected coordinates and the Bugeat location.
@@ -39,6 +38,7 @@ of every session and updated at the end — see
 - [x] Recorded the Bugeat legacy CRS override, downloaded the IGN RGE ALTI 5 m raster, and built a covered Bugeat `map.bundle`.
 - [x] Generalised GeoTIFF preparation and bundle CRS checks for EPSG:27572, and added repeatable IGN download/provider commands.
 - [x] Added the Kartverket/Geonorge WCS tile adapter for Norway and built the sample Langvatnet Phase 1 bundle with real DTM data.
+- [x] Reviewed the Langvatnet Phase 0 outputs: EPSG:32632, 357 × 263 m, 149 objects and 146 terrain objects; valid as a pipeline smoke test, too small for a playable world.
 
 - [x] Finished task — short note or commit.
 - [x] Finished task.

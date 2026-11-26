@@ -108,6 +108,11 @@ Avisos esperats:
 - Té un objecte de text, que no té significat 3D.
 - El parser ignora dos símbols rectangle de decoració.
 
+Conclusió (2026-11-26): el retall és adequat com a prova de fum del pipeline
+(georeferenciat, 146 objectes de terreny i polígons de sòl que cobreixen el mapa),
+però no com a món jugable: 9,4 ha i 149 objectes són massa petits. El proper mapa de
+referència ha de ser un mapa de cursa complet.
+
 ## Funcionalitat de `inspect.mjs`
 
 - Llegeix OCAD amb `ocad2geojson`.
