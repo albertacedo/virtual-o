@@ -348,6 +348,14 @@ classification describes map symbols only; it does not define movement speeds or
 rules. `build-bundle` verifies grid alignment and byte count, then places the class raster
 under `terrain/`. Unity import remains future work.
 
+Before burning line features, the rasteriser also checks for map meridians: long, nearly
+perfectly straight north/south lines that form a repeated, regularly spaced grid in projected
+X coordinates. This geometric rule does not depend on OCAD symbol code, description or colour.
+It excludes only features in a detected grid family (at least five lines), not an isolated
+north/south river or path, and records the detection rule and counts in the class metadata.
+For Can Camps, it detected and excluded 17 grid lines in two spacing families (~250 m); the
+water-class raster dropped from 7,881 to 3,421 cells while other water features remained.
+
 ## One-command OCAD-to-bundle pipeline
 
 Run the orchestrator after placing a single supported `.ocd` file in `data/input/`, or

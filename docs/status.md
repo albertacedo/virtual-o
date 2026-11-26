@@ -42,6 +42,7 @@ of every session and updated at the end — see
 - [x] Downloaded the ICGC 5 m terrain model for Can Camps, prepared its Float32 heightmap and built a covered `map.bundle`; see the terrain-class rasterisation entry below.
 - [x] Rasterised Can Camps terrain symbols onto the aligned 5 m DTM grid and integrated the provisional classes and legend into `map.bundle`; Unity import and gameplay rules remain pending.
 - [x] Added a resumable OCAD-to-bundle orchestrator that runs ingestion, available georeferencing/provider/DTM steps, class rasterisation and bundle creation, and pauses explicitly for missing or manual inputs.
+- [x] Added colour-independent, geometric detection of regularly spaced north/south map-grid lines before class rasterisation; validated against all 17 Can Camps meridians.
 
 - [x] Finished task — short note or commit.
 - [x] Finished task.

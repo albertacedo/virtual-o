@@ -15,6 +15,7 @@ const dtmDir = path.resolve(dtmDirArg)
 const outputDir = path.resolve(outputDirArg)
 const readJson = async (file) => JSON.parse(await fs.readFile(file, 'utf8'))
 const dtm = await readJson(path.join(dtmDir, 'metadata.json'))
+const mapInfo = await readJson(path.join(mapDir, 'info.json'))
 const collection = await readJson(path.join(mapDir, 'objects-georeferenced.geojson'))
 if (!Number.isInteger(dtm.width) || !Number.isInteger(dtm.height) || !(dtm.resolution > 0)) {
   throw new Error('DTM metadata must contain integer width/height and a positive resolution')
@@ -99,6 +100,114 @@ const priorities = new Uint8Array(width * height)
 const touchedClasses = new Uint32Array(classes.length)
 let mappedFeatures = 0
 let unmappedFeatures = 0
+const meridianDetection = detectMeridians(collection.features, mapInfo.extent.metres.height, mapInfo.extent.metres.width)
+
+function lineParts(geometry) {
+  if (geometry?.type === 'LineString') return [geometry.coordinates]
+  if (geometry?.type === 'MultiLineString') return geometry.coordinates
+  return []
+}
+
+function detectMeridians(features, mapHeight, mapWidth) {
+  const candidates = []
+  for (let featureIndex = 0; featureIndex < features.length; featureIndex += 1) {
+    for (const points of lineParts(features[featureIndex].geometry)) {
+      if (points.length < 2) continue
+      let length = 0
+      let minX = Infinity, maxX = -Infinity
+      for (let i = 0; i < points.length; i += 1) {
+        minX = Math.min(minX, points[i][0]); maxX = Math.max(maxX, points[i][0])
+        if (i > 0) length += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1])
+      }
+      const [startX, startY] = points[0]
+      const [endX, endY] = points.at(-1)
+      const dx = Math.abs(endX - startX)
+      const dy = Math.abs(endY - startY)
+      const straightness = length > 0 ? Math.hypot(dx, dy) / length : 0
+      if (dy >= mapHeight * 0.18 && dx <= Math.max(2, dy * 0.0015) && straightness >= 0.99999) {
+        candidates.push({ featureIndex, x: (minX + maxX) / 2 })
+        break
+      }
+    }
+  }
+
+  // Grid meridians form a repeated, straight north/south lattice. Detect repeated
+  // x-spacing geometrically, independently of OCAD code, description or colour.
+  candidates.sort((a, b) => a.x - b.x)
+  const detected = new Set()
+  const families = []
+  const tested = new Set()
+  for (let originIndex = 0; originIndex < candidates.length; originIndex += 1) {
+    const origin = candidates[originIndex]
+    for (let targetIndex = originIndex + 1; targetIndex < candidates.length; targetIndex += 1) {
+      const difference = candidates[targetIndex].x - origin.x
+      for (let multiple = 1; multiple <= 6; multiple += 1) {
+        const spacing = difference / multiple
+        if (spacing < Math.max(20, mapWidth * 0.003) || spacing > mapWidth * 0.25) continue
+        const key = `${originIndex}:${spacing.toFixed(2)}`
+        if (tested.has(key)) continue
+        tested.add(key)
+        const tolerance = Math.max(3, spacing * 0.015)
+        const bins = new Map()
+        for (const candidate of candidates) {
+          const bin = Math.round((candidate.x - origin.x) / spacing)
+          if (bin < 0 || Math.abs(candidate.x - (origin.x + bin * spacing)) > tolerance) continue
+          const members = bins.get(bin) ?? []
+          members.push(candidate)
+          bins.set(bin, members)
+        }
+        const occupied = [...bins.values()].flat()
+        const binNumbers = [...bins.keys()]
+        const span = Math.max(...binNumbers) - Math.min(...binNumbers) + 1
+        if (occupied.length < 5 || bins.size < 5 || span < 5 || bins.size / span < 0.55) continue
+        const family = { spacing: Number(spacing.toFixed(1)), features: [...new Set(occupied.map((item) => item.featureIndex))] }
+        families.push(family)
+        for (const index of family.features) detected.add(index)
+      }
+    }
+  }
+  const mergedFamilies = []
+  for (const family of families) {
+    const members = new Set(family.features)
+    const overlaps = mergedFamilies.filter((existing) => existing.features.some((index) => members.has(index)))
+    if (overlaps.length === 0) {
+      mergedFamilies.push({ features: [...members], spacings: [family.spacing] })
+      continue
+    }
+    const merged = overlaps[0]
+    merged.features = [...new Set([...merged.features, ...members])]
+    merged.spacings.push(family.spacing)
+    for (const duplicate of overlaps.slice(1)) {
+      merged.features = [...new Set([...merged.features, ...duplicate.features])]
+      merged.spacings.push(...duplicate.spacings)
+      mergedFamilies.splice(mergedFamilies.indexOf(duplicate), 1)
+    }
+  }
+  return {
+    featureIndices: detected,
+    candidateFeatures: new Set(candidates.map((item) => item.featureIndex)).size,
+    excludedFeatures: detected.size,
+    spacingFamilies: mergedFamilies.map((family) => ({
+      spacing: medianSpacing(family.features, candidates),
+      features: family.features.sort((a, b) => a - b),
+    })),
+    method: 'exclude straight N-S line features (>=18% map height, <=0.15 degrees from vertical) only when they belong to a repeated, regularly spaced x-coordinate lattice; independent of symbol colour/code',
+  }
+}
+
+function median(values) {
+  const ordered = values.slice().sort((a, b) => a - b)
+  const middle = Math.floor(ordered.length / 2)
+  const value = ordered.length % 2 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2
+  return Number(value.toFixed(1))
+}
+
+function medianSpacing(featureIndices, candidates) {
+  const positions = featureIndices
+    .map((featureIndex) => candidates.find((item) => item.featureIndex === featureIndex).x)
+    .sort((a, b) => a - b)
+  return median(positions.slice(1).map((position, index) => position - positions[index]))
+}
 
 function pixelIndex(x, y) {
   const col = Math.floor((x - west) / resolution)
@@ -202,7 +311,9 @@ function rasterizeGeometry(geometry, klass) {
   }
 }
 
-for (const feature of collection.features) {
+for (let featureIndex = 0; featureIndex < collection.features.length; featureIndex += 1) {
+  const feature = collection.features[featureIndex]
+  if (meridianDetection.featureIndices.has(featureIndex)) continue
   const code = Number(feature.properties?.code)
   const sub = String(feature.properties?.sub ?? '0')
   const klass = byName.get(symbolSubclasses.get(`${code}.${sub}`) ?? symbolClasses.get(code))
@@ -221,9 +332,10 @@ await fs.writeFile(path.join(outputDir, 'classes.bin'), pixels)
 const legend = {
   formatVersion: 1,
   encoding: 'unsigned 8-bit class ID; row-major; rows north to south',
-  rasterization: 'polygon cell-centre fill; lines sampled at less than half-cell intervals; points assigned to containing cell',
+  rasterization: 'polygon cell-centre fill; lines sampled at less than half-cell intervals; points assigned to containing cell; repeated map meridians excluded',
   defaultClass: 0,
   overlapRule: 'higher class priority wins; equal priority uses the later OCAD feature',
+  excludedMapGridLines: meridianDetection.method,
   classes: classes.map((item) => ({ ...item, cells: touchedClasses[item.id] })),
   symbolMapping: Object.fromEntries([...symbolClasses].sort(([a], [b]) => a - b)),
   symbolSubclasses: Object.fromEntries([...symbolSubclasses].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))),
@@ -238,6 +350,9 @@ const metadata = {
   legend: 'legend.json',
   mappedFeatures,
   unmappedFeatures,
+  excludedMeridianFeatures: meridianDetection.excludedFeatures,
+  meridianCandidates: meridianDetection.candidateFeatures,
+  meridianSpacingFamilies: meridianDetection.spacingFamilies,
   classifiedCells: touchedClasses.reduce((sum, count, id) => sum + (id ? count : 0), 0),
   unclassifiedCells: touchedClasses[0],
   totalCells: width * height,
