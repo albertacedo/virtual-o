@@ -1,0 +1,17 @@
+{
+  "crs": {
+    "catalog": "EPSG",
+    "code": 25831,
+    "name": "ETRS89 / UTM zone 31N"
+  },
+  "anchor": {
+    "name": "Camp municipal d'esports Joan Misser i Coll",
+    "source": "OpenStreetMap way 193737117; centre of the mapped soccer pitch",
+    "latitude": 41.64104292,
+    "longitude": 2.39831182,
+    "x": 720.5,
+    "z": 73,
+    "easting": 449890.44,
+    "northing": 4610097.712
+  }
+}

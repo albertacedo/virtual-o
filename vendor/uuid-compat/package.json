@@ -1,0 +1,20 @@
+{
+  "name": "uuid",
+  "version": "11.1.1",
+  "description": "RFC9562 UUIDs with legacy v4 subpath compatibility",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "exports": {
+    ".": {
+      "node": {
+        "import": "./dist/esm/index.js",
+        "require": "./dist/cjs/index.js"
+      },
+      "default": "./dist/esm-browser/index.js"
+    },
+    "./v4": "./v4.cjs",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "v4.cjs"],
+  "license": "MIT"
+}

@@ -1,0 +1,25 @@
+{
+  "name": "virtual-o",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OCAD to 3D orienteering pipeline (phase 0: ingest probe)",
+  "type": "commonjs",
+  "scripts": {
+    "phase0": "node tools/phase0/inspect.mjs",
+    "georeference": "node tools/phase0/georeference.mjs",
+    "prepare-dtm": "node tools/phase1/prepare-dtm.mjs",
+    "build-bundle": "node tools/phase1/build-bundle.mjs"
+  },
+  "license": "AGPL-3.0-or-later",
+  "overrides": {
+    "ocad2geojson": {
+      "uuid": "file:../../vendor/uuid-compat",
+      "xmldom": "npm:@xmldom/xmldom@^0.9.12"
+    }
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "arr-flatten": "^1.1.0",
+    "ocad2geojson": "^2.1.23"
+  }
+}

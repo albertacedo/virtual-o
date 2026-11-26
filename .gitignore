@@ -29,6 +29,12 @@ node_modules/
 dist/
 coverage/
 
+# Vendored dependency compatibility files are source, not build output.
+!vendor/uuid-compat/dist/
+!vendor/uuid-compat/dist/**
+!vendor/uuid-compat/dist/esm/bin/
+!vendor/uuid-compat/dist/esm/bin/**
+
 # .NET
 bin/
 obj/
@@ -43,6 +49,9 @@ site/
 Backups/
 
 # Local data — keep this list in sync with backup.targets
+# Generated map output
+/data/out/
+
 # data/
 # *.db
 
@@ -170,6 +179,7 @@ InitTestScene*.unity*
 .cache/
 
 # Content-check tool: build output is ignored, the project file is tracked
+/tools/mapper/
 /tools/**/bin/
 /tools/**/obj/
 !/tools/content-check/content-check.csproj

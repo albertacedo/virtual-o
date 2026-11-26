@@ -6,6 +6,7 @@ and what is still pending.
 | Date | Session | Commits | One-line summary |
 |---|---|---|---|
 | 2026-11-25 | [Bootstrap](2026-11-25-bootstrap.md) | — | Project bootstrap |
+| 2026-11-26 | [Prepare Llinars DTM and first bundle](2026-11-26-dtm-bundle.md) | pending | Official DTM, heightmap and first map.bundle |
 
 The first real session adds its row here:
 

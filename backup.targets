@@ -5,5 +5,7 @@
 # Example:
 #   data/app.db
 #   Assets/Generated
+data/input/
+data/out/
 #
 # The backup script writes to Backups/<timestamp>/ and never deletes anything.
