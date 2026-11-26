@@ -356,6 +356,16 @@ north/south river or path, and records the detection rule and counts in the clas
 For Can Camps, it detected and excluded 17 grid lines in two spacing families (~250 m); the
 water-class raster dropped from 7,881 to 3,421 cells while other water features remained.
 
+Legend material is filtered separately. The rasteriser looks for an explicit legend-title
+text (for example `Legend`, `Legende`, `Leyenda` or `Llegenda`), estimates the map-content
+footprint from the densest spatial cluster of objects, and excludes nearby features only when
+the title lies outside that footprint. This removes the detached legend samples, captions and
+scale furniture without treating an ordinary map label as a legend. For Can Camps, 101
+features associated with the detached `Llegenda` panel were excluded; the class raster now
+contains 225,788 classified cells. The anchor, estimated map-content bounds and exclusion
+counts are recorded in `metadata.json`. Maps without a recognizable external legend title
+are left unchanged by this rule.
+
 ## One-command OCAD-to-bundle pipeline
 
 Run the orchestrator after placing a single supported `.ocd` file in `data/input/`, or

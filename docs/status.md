@@ -43,6 +43,7 @@ of every session and updated at the end — see
 - [x] Rasterised Can Camps terrain symbols onto the aligned 5 m DTM grid and integrated the provisional classes and legend into `map.bundle`; Unity import and gameplay rules remain pending.
 - [x] Added a resumable OCAD-to-bundle orchestrator that runs ingestion, available georeferencing/provider/DTM steps, class rasterisation and bundle creation, and pauses explicitly for missing or manual inputs.
 - [x] Added colour-independent, geometric detection of regularly spaced north/south map-grid lines before class rasterisation; validated against all 17 Can Camps meridians.
+- [x] Added external legend detection using a legend-title label and the dense map-content footprint; removed Can Camps legend samples and captions from the terrain-class raster.
 
 - [x] Finished task — short note or commit.
 - [x] Finished task.

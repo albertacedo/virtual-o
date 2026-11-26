@@ -101,6 +101,7 @@ const touchedClasses = new Uint32Array(classes.length)
 let mappedFeatures = 0
 let unmappedFeatures = 0
 const meridianDetection = detectMeridians(collection.features, mapInfo.extent.metres.height, mapInfo.extent.metres.width)
+const legendDetection = detectLegendAreas(collection.features, mapInfo.extent.metres.height, mapInfo.extent.metres.width)
 
 function lineParts(geometry) {
   if (geometry?.type === 'LineString') return [geometry.coordinates]
@@ -209,6 +210,97 @@ function medianSpacing(featureIndices, candidates) {
   return median(positions.slice(1).map((position, index) => position - positions[index]))
 }
 
+function featureCenter(feature) {
+  const bounds = boundsOf(feature.geometry?.coordinates)
+  if (!Number.isFinite(bounds.minX)) return null
+  return { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }
+}
+
+function detectLegendAreas(features, mapHeight, mapWidth) {
+  const centers = features.map(featureCenter)
+  const valid = centers.filter(Boolean)
+  if (valid.length === 0) return { featureIndices: new Set(), excludedFeatures: 0, anchors: [], coreBounds: null, radius: 0 }
+
+  const cellSize = Math.min(300, Math.max(100, Math.min(mapHeight, mapWidth) / 20))
+  const originX = Math.min(...valid.map((center) => center.x))
+  const originY = Math.min(...valid.map((center) => center.y))
+  const bins = new Map()
+  for (let featureIndex = 0; featureIndex < centers.length; featureIndex += 1) {
+    const center = centers[featureIndex]
+    if (!center) continue
+    const x = Math.floor((center.x - originX) / cellSize)
+    const y = Math.floor((center.y - originY) / cellSize)
+    const key = `${x},${y}`
+    const bin = bins.get(key) ?? { x, y, count: 0 }
+    bin.count += 1
+    bins.set(key, bin)
+  }
+
+  const peak = Math.max(...[...bins.values()].map((bin) => bin.count))
+  const densityThreshold = Math.max(8, Math.ceil(peak * 0.1))
+  const active = new Map([...bins].filter(([, bin]) => bin.count >= densityThreshold))
+  const remaining = new Set(active.keys())
+  const components = []
+  while (remaining.size > 0) {
+    const first = remaining.values().next().value
+    remaining.delete(first)
+    const queue = [first]
+    const component = []
+    while (queue.length > 0) {
+      const key = queue.pop()
+      const bin = active.get(key)
+      component.push(bin)
+      for (let dx = -1; dx <= 1; dx += 1) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          if (dx === 0 && dy === 0) continue
+          const neighbour = `${bin.x + dx},${bin.y + dy}`
+          if (remaining.delete(neighbour)) queue.push(neighbour)
+        }
+      }
+    }
+    components.push(component)
+  }
+  components.sort((a, b) => b.reduce((sum, bin) => sum + bin.count, 0) - a.reduce((sum, bin) => sum + bin.count, 0))
+  const core = components[0]
+  if (!core || core.length < 5) {
+    return { featureIndices: new Set(), excludedFeatures: 0, anchors: [], coreBounds: null, radius: 0 }
+  }
+  const coreBounds = {
+    west: originX + Math.min(...core.map((bin) => bin.x)) * cellSize,
+    east: originX + (Math.max(...core.map((bin) => bin.x)) + 1) * cellSize,
+    south: originY + Math.min(...core.map((bin) => bin.y)) * cellSize,
+    north: originY + (Math.max(...core.map((bin) => bin.y)) + 1) * cellSize,
+  }
+
+  const legendPattern = /\b(?:legend(?:a|e)?|llegenda|leyenda|tegnforklaring|signaturforklaring|zeichenerklarung)\b/i
+  const margin = cellSize * 2
+  const anchors = []
+  for (let featureIndex = 0; featureIndex < features.length; featureIndex += 1) {
+    const feature = features[featureIndex]
+    const text = String(feature.properties?.text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const center = centers[featureIndex]
+    if (center && feature.properties?.kind === 'text' && legendPattern.test(text) &&
+        (center.x < coreBounds.west - margin || center.x > coreBounds.east + margin ||
+         center.y < coreBounds.south - margin || center.y > coreBounds.north + margin)) {
+      anchors.push({ featureIndex, text: String(feature.properties.text).trim(), ...center })
+    }
+  }
+
+  const radius = Math.max(cellSize * 4, mapHeight * 0.45)
+  const excluded = new Set()
+  for (let featureIndex = 0; featureIndex < centers.length; featureIndex += 1) {
+    const center = centers[featureIndex]
+    if (!center || anchors.length === 0) continue
+    const outsideCore = center.x < coreBounds.west - margin || center.x > coreBounds.east + margin ||
+      center.y < coreBounds.south - margin || center.y > coreBounds.north + margin
+    if (!outsideCore) continue
+    if (anchors.some((anchor) => Math.hypot(center.x - anchor.x, center.y - anchor.y) <= radius)) {
+      excluded.add(featureIndex)
+    }
+  }
+  return { featureIndices: excluded, excludedFeatures: excluded.size, anchors, coreBounds, radius }
+}
+
 function pixelIndex(x, y) {
   const col = Math.floor((x - west) / resolution)
   const row = Math.floor((north - y) / resolution)
@@ -313,7 +405,7 @@ function rasterizeGeometry(geometry, klass) {
 
 for (let featureIndex = 0; featureIndex < collection.features.length; featureIndex += 1) {
   const feature = collection.features[featureIndex]
-  if (meridianDetection.featureIndices.has(featureIndex)) continue
+  if (meridianDetection.featureIndices.has(featureIndex) || legendDetection.featureIndices.has(featureIndex)) continue
   const code = Number(feature.properties?.code)
   const sub = String(feature.properties?.sub ?? '0')
   const klass = byName.get(symbolSubclasses.get(`${code}.${sub}`) ?? symbolClasses.get(code))
@@ -336,6 +428,7 @@ const legend = {
   defaultClass: 0,
   overlapRule: 'higher class priority wins; equal priority uses the later OCAD feature',
   excludedMapGridLines: meridianDetection.method,
+  excludedLegendAreas: 'exclude features outside the densest map-content region when they are spatially associated with an explicit legend title (e.g. Legend, Legenda, Llegenda, Légende, Leyenda)',
   classes: classes.map((item) => ({ ...item, cells: touchedClasses[item.id] })),
   symbolMapping: Object.fromEntries([...symbolClasses].sort(([a], [b]) => a - b)),
   symbolSubclasses: Object.fromEntries([...symbolSubclasses].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))),
@@ -350,9 +443,14 @@ const metadata = {
   legend: 'legend.json',
   mappedFeatures,
   unmappedFeatures,
+  excludedFeatures: collection.features.length - mappedFeatures - unmappedFeatures,
   excludedMeridianFeatures: meridianDetection.excludedFeatures,
   meridianCandidates: meridianDetection.candidateFeatures,
   meridianSpacingFamilies: meridianDetection.spacingFamilies,
+  excludedLegendFeatures: legendDetection.excludedFeatures,
+  legendAnchors: legendDetection.anchors,
+  mapContentBounds: legendDetection.coreBounds,
+  legendAssociationRadius: legendDetection.radius,
   classifiedCells: touchedClasses.reduce((sum, count, id) => sum + (id ? count : 0), 0),
   unclassifiedCells: touchedClasses[0],
   totalCells: width * height,
