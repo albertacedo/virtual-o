@@ -325,6 +325,21 @@ npm.cmd run georeference -- "data/out/Can Camps TOTAL 2012 v2 - Còpia" "data/ge
 npm.cmd run resolve-terrain -- "data/out/Can Camps TOTAL 2012 v2 - Còpia/info.json" "data/georeferencing/can-camps-crs.json"
 ```
 
+The ICGC 5 m topographic DTM (2009–2018) was requested for the full Can Camps map extent.
+Its GeoTIFF and world file are kept under the ignored
+`data/out/Can Camps TOTAL 2012 v2 - Còpia/icgc-source/` directory. Prepare and package it
+with:
+
+```powershell
+npm.cmd run prepare-dtm -- "data/out/Can Camps TOTAL 2012 v2 - Còpia/icgc-source/<downloaded>.tif" "data/out/Can Camps TOTAL 2012 v2 - Còpia/dtm" "EPSG:25831"
+npm.cmd run build-bundle -- "data/out/Can Camps TOTAL 2012 v2 - Còpia" "data/out/Can Camps TOTAL 2012 v2 - Còpia/dtm" "data/out/Can Camps TOTAL 2012 v2 - Còpia/map.bundle"
+```
+
+The returned raster is 1,289 × 683 cells at 5 m, in EPSG:25831, with elevations from
+72.93 m to 297.54 m. `build-bundle` confirms that it covers the full 6.44 × 3.41 km map.
+The bundle contains the heightmap, georeferenced vectors, map drape and manifest; terrain
+class rasterisation and the Unity importer remain future work.
+
 ## Terrain-O and Norwegian terrain
 
 Terrain-O does not use its WMS for elevation values. Its `fetch/kartverket.py` adapter

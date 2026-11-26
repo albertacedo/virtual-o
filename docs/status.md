@@ -39,6 +39,7 @@ of every session and updated at the end — see
 - [x] Generalised GeoTIFF preparation and bundle CRS checks for EPSG:27572, and added repeatable IGN download/provider commands.
 - [x] Added the Kartverket/Geonorge WCS tile adapter for Norway and built the sample Langvatnet Phase 1 bundle with real DTM data.
 - [x] Reviewed the Langvatnet Phase 0 outputs: EPSG:32632, 357 × 263 m, 149 objects and 146 terrain objects; valid as a pipeline smoke test, too small for a playable world.
+- [x] Downloaded the ICGC 5 m terrain model for Can Camps, prepared its Float32 heightmap and built a covered `map.bundle`; terrain classes and Unity import remain pending.
 
 - [x] Finished task — short note or commit.
 - [x] Finished task.

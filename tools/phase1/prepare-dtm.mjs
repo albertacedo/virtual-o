@@ -125,7 +125,8 @@ if (tiled) {
   const tilesX = Math.ceil(width / tileWidth)
   for (let tile = 0; tile < tileOffsets.length; tile += 1) {
     const compressed = bytes.subarray(tileOffsets[tile], tileOffsets[tile] + tileByteCounts[tile])
-    const decoded = compression === 5 ? decodeLzw(compressed) : compressed
+    const decodedBytes = compression === 5 ? decodeLzw(compressed) : compressed
+    const decoded = Buffer.from(decodedBytes.buffer, decodedBytes.byteOffset, decodedBytes.byteLength)
     const tileX = tile % tilesX
     const tileY = Math.floor(tile / tilesX)
     for (let y = 0; y < tileHeight; y += 1) {
