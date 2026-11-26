@@ -73,4 +73,5 @@ nav:
       - "2026-11-25 · Bootstrap": sessions/2026-11-25-bootstrap.md
       - "2026-11-26 · Prepare Llinars DTM and first bundle": sessions/2026-11-26-dtm-bundle.md
       - "2026-11-26 · Multi-country DTM providers": sessions/2026-11-26-multicountry-dtm.md
+      - "2026-11-26 · Automate Can Camps terrain bundle": sessions/2026-11-26-can-camps-automation.md
   - Archive: archive/index.md

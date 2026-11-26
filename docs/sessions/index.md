@@ -8,6 +8,7 @@ and what is still pending.
 | 2026-11-25 | [Bootstrap](2026-11-25-bootstrap.md) | — | Project bootstrap |
 | 2026-11-26 | [Prepare Llinars DTM and first bundle](2026-11-26-dtm-bundle.md) | pending | Official DTM, heightmap and first map.bundle |
 | 2026-11-26 | [Multi-country DTM providers](2026-11-26-multicountry-dtm.md) | `59fb186` | France IGN and Norway Kartverket terrain bundles |
+| 2026-11-26 | [Automate Can Camps terrain bundle](2026-11-26-can-camps-automation.md) | `2b4a387`, `2151b96`, `2848a5a` | One-command pipeline, meridian and external legend filtering |
 
 The first real session adds its row here:
 

@@ -36,7 +36,7 @@ One paragraph: what this project is, who it is for, and what problem it solves.
 
 | Area | Status |
 |---|---|
-| Core | ✅ Phase 0 + Phase 1 bundle tooling |
+| Core | ✅ Resumable OCAD-to-bundle pipeline with terrain classes and height data |
 | Tests | ✅ Project checks pass |
 | Documentation | ⚠️ Architecture placeholders remain |
 | Release | ❌ |

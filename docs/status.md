@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: **2026-11-26** (one-command map bundle pipeline added)_
+_Last updated: **2026-11-26** (white-forest classification recorded as pending)_
 
 This page is the single source of truth for **what is pending**. It is read at the start
 of every session and updated at the end — see
@@ -10,6 +10,7 @@ of every session and updated at the end — see
 
 ### Next up
 
+- [ ] Inspect Can Camps white-forest representation and classify only after confirming which blank cells are runnable forest versus unknown or outside-map area.
 - [x] Add the Can Camps Catalonia `.ocd`, verify its extent and used symbols, and georeference it to EPSG:25831 from the AP-7/C-16 anchor.
 - [x] Convert `Bugeat Nord.ocd` from OCAD 9 to OCAD 12/2018 and validate its extent and symbols.
 - [x] Confirm `Bugeat Nord` as France / EPSG:27572 from its preserved projected coordinates and the Bugeat location.
