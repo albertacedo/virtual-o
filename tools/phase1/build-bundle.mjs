@@ -4,7 +4,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-const [mapDirArg, dtmDirArg, bundleDirArg] = process.argv.slice(2)
+const [mapDirArg, dtmDirArg, bundleDirArg, classesDirArg] = process.argv.slice(2)
 if (!mapDirArg || !dtmDirArg || !bundleDirArg) {
   console.error('usage: build-bundle.mjs <map-output-dir> <dtm-dir> <bundle-dir>')
   process.exit(1)
@@ -13,6 +13,7 @@ if (!mapDirArg || !dtmDirArg || !bundleDirArg) {
 const mapDir = path.resolve(mapDirArg)
 const dtmDir = path.resolve(dtmDirArg)
 const bundleDir = path.resolve(bundleDirArg)
+const classesDir = classesDirArg ? path.resolve(classesDirArg) : null
 const readJson = async (file) => JSON.parse(await fs.readFile(file, 'utf8'))
 const copy = async (source, target) => {
   await fs.mkdir(path.dirname(target), { recursive: true })
@@ -38,12 +39,37 @@ const covers = projectedMap.west >= dtm.extent.west && projectedMap.east <= dtm.
   projectedMap.south >= dtm.extent.south && projectedMap.north <= dtm.extent.north
 if (!covers) throw new Error(`DTM does not cover map extent: ${JSON.stringify({ projectedMap, dtm: dtm.extent })}`)
 
+let classes = null
+if (classesDir) {
+  const classMetadata = await readJson(path.join(classesDir, 'metadata.json'))
+  if (classMetadata.width !== dtm.width || classMetadata.height !== dtm.height ||
+      classMetadata.resolution !== dtm.resolution || classMetadata.crs !== dtm.crs ||
+      classMetadata.extent.west !== dtm.extent.west || classMetadata.extent.north !== dtm.extent.north ||
+      classMetadata.origin.easting !== dtm.origin.easting || classMetadata.origin.northing !== dtm.origin.northing) {
+    throw new Error('class raster grid does not match the DTM grid')
+  }
+  const classBytes = await fs.stat(path.join(classesDir, 'classes.bin'))
+  if (classBytes.size !== dtm.width * dtm.height) throw new Error('class raster byte size does not match its grid dimensions')
+  classes = {
+    file: 'terrain/classes.bin',
+    metadata: 'terrain/metadata.json',
+    legend: 'terrain/legend.json',
+    encoding: 'unsigned 8-bit class ID; row-major; rows north to south',
+  }
+}
+
 await fs.rm(bundleDir, { recursive: true, force: true })
 await fs.mkdir(bundleDir, { recursive: true })
 await copy(path.join(dtmDir, 'heightmap.bin'), path.join(bundleDir, 'height', 'heightmap.bin'))
 await copy(path.join(dtmDir, 'metadata.json'), path.join(bundleDir, 'height', 'metadata.json'))
 await copy(path.join(mapDir, 'objects-georeferenced.geojson'), path.join(bundleDir, 'vectors', 'objects.geojson'))
 await copy(path.join(mapDir, 'map.png'), path.join(bundleDir, 'drape', 'map.png'))
+
+if (classesDir) {
+  await copy(path.join(classesDir, 'classes.bin'), path.join(bundleDir, 'terrain', 'classes.bin'))
+  await copy(path.join(classesDir, 'legend.json'), path.join(bundleDir, 'terrain', 'legend.json'))
+  await copy(path.join(classesDir, 'metadata.json'), path.join(bundleDir, 'terrain', 'metadata.json'))
+}
 
 const manifest = {
   bundleVersion: 1,
@@ -67,7 +93,11 @@ const manifest = {
   vectors: 'vectors/objects.geojson',
   drape: 'drape/map.png',
   generatedBy: 'virtual-o phase 1 bundle builder',
-  limitations: ['terrain classes and Unity import are not included yet'],
+  ...(classes ? { classes } : {}),
+  limitations: [
+    ...(classes ? ['terrain classes are a provisional symbol-based classification, not movement rules'] : ['terrain classes are not included']),
+    'Unity import is not included yet',
+  ],
 }
 await fs.writeFile(path.join(bundleDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
 

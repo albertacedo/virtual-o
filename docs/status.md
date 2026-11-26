@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: **2026-11-26** (multi-country DTM session closed)_
+_Last updated: **2026-11-26** (one-command map bundle pipeline added)_
 
 This page is the single source of truth for **what is pending**. It is read at the start
 of every session and updated at the end — see
@@ -22,7 +22,7 @@ of every session and updated at the end — see
 
 ### Later
 
-- [ ] Start Phase 1: rasterise basic classes and export the first playable Unity terrain.
+- [ ] Continue Phase 1: implement the Unity importer and export the first playable Unity terrain.
 
 ### Housekeeping
 
@@ -39,7 +39,9 @@ of every session and updated at the end — see
 - [x] Generalised GeoTIFF preparation and bundle CRS checks for EPSG:27572, and added repeatable IGN download/provider commands.
 - [x] Added the Kartverket/Geonorge WCS tile adapter for Norway and built the sample Langvatnet Phase 1 bundle with real DTM data.
 - [x] Reviewed the Langvatnet Phase 0 outputs: EPSG:32632, 357 × 263 m, 149 objects and 146 terrain objects; valid as a pipeline smoke test, too small for a playable world.
-- [x] Downloaded the ICGC 5 m terrain model for Can Camps, prepared its Float32 heightmap and built a covered `map.bundle`; terrain classes and Unity import remain pending.
+- [x] Downloaded the ICGC 5 m terrain model for Can Camps, prepared its Float32 heightmap and built a covered `map.bundle`; see the terrain-class rasterisation entry below.
+- [x] Rasterised Can Camps terrain symbols onto the aligned 5 m DTM grid and integrated the provisional classes and legend into `map.bundle`; Unity import and gameplay rules remain pending.
+- [x] Added a resumable OCAD-to-bundle orchestrator that runs ingestion, available georeferencing/provider/DTM steps, class rasterisation and bundle creation, and pauses explicitly for missing or manual inputs.
 
 - [x] Finished task — short note or commit.
 - [x] Finished task.

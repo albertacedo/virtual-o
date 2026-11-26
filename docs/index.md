@@ -3,8 +3,8 @@
 One paragraph: what this project is, who it is for, and what problem it solves.
 
 !!! info "Status"
-    Working as of **2026-11-26**: Phase 0 ingestion and Phase 1 terrain bundles work for
-    Catalonia, France and the Norwegian sample. Everything else is tracked in
+    Working as of **2026-11-26**: a resumable command can build terrain bundles from supported
+    OCAD maps when georeferencing and terrain inputs are available. Everything else is tracked in
     [Status](status.md).
 
 ## What it does

@@ -12,6 +12,8 @@
     "download-kartverket-dtm": "node tools/phase1/download-kartverket-dtm.mjs",
     "prepare-dtm": "node tools/phase1/prepare-dtm.mjs",
     "build-bundle": "node tools/phase1/build-bundle.mjs",
+    "rasterize-classes": "node tools/phase1/rasterize-classes.mjs",
+    "build-map": "node tools/phase1/build-map.mjs",
     "resolve-terrain": "node tools/phase1/resolve-terrain-source.mjs"
   },
   "license": "AGPL-3.0-or-later",

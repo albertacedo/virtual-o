@@ -332,13 +332,53 @@ with:
 
 ```powershell
 npm.cmd run prepare-dtm -- "data/out/Can Camps TOTAL 2012 v2 - Còpia/icgc-source/<downloaded>.tif" "data/out/Can Camps TOTAL 2012 v2 - Còpia/dtm" "EPSG:25831"
-npm.cmd run build-bundle -- "data/out/Can Camps TOTAL 2012 v2 - Còpia" "data/out/Can Camps TOTAL 2012 v2 - Còpia/dtm" "data/out/Can Camps TOTAL 2012 v2 - Còpia/map.bundle"
+npm.cmd run rasterize-classes -- "data/out/Can Camps TOTAL 2012 v2 - Còpia" "data/out/Can Camps TOTAL 2012 v2 - Còpia/dtm" "data/out/Can Camps TOTAL 2012 v2 - Còpia/classes"
+npm.cmd run build-bundle -- "data/out/Can Camps TOTAL 2012 v2 - Còpia" "data/out/Can Camps TOTAL 2012 v2 - Còpia/dtm" "data/out/Can Camps TOTAL 2012 v2 - Còpia/map.bundle" "data/out/Can Camps TOTAL 2012 v2 - Còpia/classes"
 ```
 
 The returned raster is 1,289 × 683 cells at 5 m, in EPSG:25831, with elevations from
 72.93 m to 297.54 m. `build-bundle` confirms that it covers the full 6.44 × 3.41 km map.
-The bundle contains the heightmap, georeferenced vectors, map drape and manifest; terrain
-class rasterisation and the Unity importer remain future work.
+The class raster uses the DTM's 1,289 × 683 grid and 5 m cell size. It stores one unsigned
+8-bit ID per cell in `classes.bin`, with class names, provisional colours, symbol mappings,
+overlap priorities and per-class cell counts in `legend.json`; `metadata.json` records the
+grid and classified/unclassified totals. The latest Can Camps pass classified 229,028 cells
+and left 651,359 unclassified because no mapped terrain symbol covered them. Unmapped
+symbols (including contour lines, which are represented by the DTM) are not guessed. The
+classification describes map symbols only; it does not define movement speeds or game
+rules. `build-bundle` verifies grid alignment and byte count, then places the class raster
+under `terrain/`. Unity import remains future work.
+
+## One-command OCAD-to-bundle pipeline
+
+Run the orchestrator after placing a single supported `.ocd` file in `data/input/`, or
+name the input explicitly:
+
+```powershell
+npm.cmd run build-map -- "data/input/my-map.ocd"
+```
+
+It ingests the map, uses native projected coordinates when the OCAD file has a valid CRS,
+selects a registered terrain provider, downloads terrain where the provider adapter supports
+it, prepares the DTM, rasterises known terrain symbols and builds `map.bundle`. To use an
+existing prepared DTM directory or source GeoTIFF, pass `--dtm`; output defaults to a new
+`data/out/<map>-pipeline/` directory. A non-empty output can be resumed only when it belongs
+to the same input map; unrelated output is never overwritten.
+
+Some maps need verified information that cannot be inferred safely. For example, Can Camps
+needs its surveyed anchor, and the ICGC download currently requires a manual request. Resume
+the paused run by passing the known inputs:
+
+```powershell
+npm.cmd run build-map -- "data/input/my-map.ocd" --georeference "data/georeferencing/my-map.json" --dtm "data/out/my-map/dtm"
+```
+
+Use `--crs-override` instead of `--georeference` only when projected coordinates are already
+preserved in the map and a verified CRS is all that is missing. IGN France and a single-tile
+Kartverket Norway request can run automatically; multi-tile Norway mosaics are not yet
+supported by this orchestrator. OCAD 9 and older must first be converted to the supported
+OCAD 12/2018 format. `--help` lists all options. The command stops and explains the missing
+input rather than guessing a location, CRS or terrain source. Unity import is still a separate
+step.
 
 ## Terrain-O and Norwegian terrain
 
