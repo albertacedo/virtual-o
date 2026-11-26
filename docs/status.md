@@ -10,7 +10,7 @@ of every session and updated at the end — see
 
 ### Next up
 
-- [ ] Add a real Catalonia `.ocd` map and verify its CRS, extent and used symbols.
+- [x] Add the Can Camps Catalonia `.ocd`, verify its extent and used symbols, and georeference it to EPSG:25831 from the AP-7/C-16 anchor.
 - [x] Convert `Bugeat Nord.ocd` from OCAD 9 to OCAD 12/2018 and validate its extent and symbols.
 - [x] Confirm `Bugeat Nord` as France / EPSG:27572 from its preserved projected coordinates and the Bugeat location.
 - [ ] Extend DTM acquisition to additional countries and terrain-data providers beyond Catalonia and France.

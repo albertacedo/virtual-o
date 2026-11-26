@@ -1,0 +1,19 @@
+{
+  "crs": {
+    "catalog": "EPSG",
+    "code": 25831,
+    "name": "ETRS89 / UTM zone 31N"
+  },
+  "confidence": "high",
+  "method": "User-provided AP-7/C-16 four-loop interchange at 41.489280 N, 2.059324 E, matched to the map road vectors at local x=855 m, z=2729 m.",
+  "anchor": {
+    "name": "AP-7/C-16 four-loop interchange",
+    "source": "User-provided geographic coordinate and map road-symbol match",
+    "latitude": 41.48928,
+    "longitude": 2.059324,
+    "x": 855,
+    "z": 2729,
+    "easting": 421475.191,
+    "northing": 4593501.157
+  }
+}

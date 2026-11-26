@@ -61,7 +61,7 @@ const metadata = {
   source: path.basename(outputDir),
   crs: config.crs,
   anchor: config.anchor,
-  method: 'translation from a known football-pitch centre; validate against additional map features before LiDAR fusion',
+  method: config.method ?? 'translation from a known anchor; validate against additional map features before LiDAR fusion',
   outputs: ['objects-georeferenced.geojson'],
 }
 

@@ -308,6 +308,23 @@ npm.cmd run build-bundle -- "data/out/bugeat-nord" "data/out/bugeat-nord/dtm" "d
 The resulting bundle contains the 5 m Float32 heightmap, EPSG:27572 vectors, the map drape
 and a manifest confirming that the terrain covers the full map extent.
 
+## Can Camps validation
+
+`Can Camps TOTAL 2012 v2 - Còpia.ocd` is an OCAD 12 conversion of the supplied OCAD 9
+map. Phase 0 reads it successfully: it is a 1:10,000 map covering 6,440.7 m × 3,406.9 m,
+with 8,134 objects and 139 used symbols. The supplied AP-7/C-16 four-loop interchange at
+41.489280 N, 2.059324 E matches the road vectors at local coordinates x=855 m, z=2729 m.
+The resulting georeferencing uses EPSG:25831 and is recorded in
+`data/georeferencing/can-camps-crs.json`. The nearest transformed road vertex is within
+0.3 m of the supplied coordinate.
+
+Repeat the georeferencing and provider selection with:
+
+```powershell
+npm.cmd run georeference -- "data/out/Can Camps TOTAL 2012 v2 - Còpia" "data/georeferencing/can-camps-crs.json"
+npm.cmd run resolve-terrain -- "data/out/Can Camps TOTAL 2012 v2 - Còpia/info.json" "data/georeferencing/can-camps-crs.json"
+```
+
 ## Terrain-O and Norwegian terrain
 
 Terrain-O does not use its WMS for elevation values. Its `fetch/kartverket.py` adapter
