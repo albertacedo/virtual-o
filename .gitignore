@@ -50,6 +50,7 @@ Backups/
 
 # Local data — keep this list in sync with backup.targets
 # Generated map output
+/data/input/
 /data/out/
 
 # data/

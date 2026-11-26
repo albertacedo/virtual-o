@@ -1,7 +1,7 @@
 # 2026-11-26 · Multi-country DTM providers
 
 **Duration:** afternoon
-**Commits:** pending
+**Commits:** `59fb186` — feat: add multi-country terrain providers
 
 ## Objective
 
@@ -72,7 +72,7 @@ provider appropriate to the map CRS.
 
 ## Housekeeping
 
-- [ ] Backup run and verified by the session-end script.
+- [x] Backup run and verified by the session-end script: `Backups/2026-11-26_041122976/`.
 - [ ] Release tagged (only if this session closed a milestone).
 - [x] `docs/status.md` updated.
 
